@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import axios from "axios";
+import { getAllItems, requestBorrowItem } from "@/api/items";
 import ItemCard from "@/components/ItemCard";
 
 const Home = () => {
@@ -30,8 +30,8 @@ const Home = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/items");
-      setItems(response.data);
+      const data = await getAllItems();
+      setItems(data);
     } catch (error) {
       console.error("Error fetching items:", error);
       toast.error("Failed to load items");
@@ -65,10 +65,8 @@ const Home = () => {
 
   const handleRequestBorrow = async (itemId) => {
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/items/${itemId}/request`
-      );
-      toast.success(response.data.message);
+      const data = await requestBorrowItem(itemId);
+      toast.success(data.message);
       fetchItems(); // Refresh the list
     } catch (error) {
       console.error("Error requesting item:", error);

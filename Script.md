@@ -10,13 +10,11 @@ card_type: cue_card
 - Understanding the project structure and requirements
 - Backend Development - Node.js & Express.js API
 - Creating RESTful endpoints for CRUD operations
-- Frontend-Backend integration using Axios
+- Setting up a professional API layer with Axios
+- Frontend-Backend integration with modular API functions
 - Testing the complete full-stack application
-- Best practices for API design and error handling
 
 **Project Overview:** We'll transform a static React frontend into a dynamic full-stack application by building a complete backend API and integrating it with the pre-built UI components.
-
-**What Students Get:** Complete starter code with functional UI, search, filtering, and sorting - all working with placeholder data. During the workshop, we'll make it live with real API integration.
 
 ---
 title: Project Structure & Prerequisites
@@ -466,9 +464,9 @@ app.post("/api/items/:id/request", (req, res) => {
 ```
 
 ---
-title: Frontend Integration - Installing Axios
-description: Adding HTTP client to our React application
-duration: 5
+title: Frontend Integration - Installing Axios & Setting Up API Foundation
+description: Adding HTTP client and creating the foundation for our API layer
+duration: 15
 card_type: cue_card
 ---
 
@@ -520,15 +518,70 @@ npm install axios
 **Alternative to Axios:** You could use the built-in `fetch()` API, but Axios provides a cleaner syntax and better error handling for this workshop.
 
 ---
+title: Setting Up Professional API Layer Foundation
+description: Creating a centralized axios instance for consistent API calls
+duration: 10
+card_type: cue_card
+---
+
+## Building a Professional API Architecture
+
+**Teaching Context:** Instead of using axios directly in components, we'll create a professional API layer. This is how real-world applications organize their API calls. We'll build it incrementally as we need different functions.
+
+### Step 1: Create Axios Instance
+
+**File:** `src/lib/axios.js`
+
+```javascript
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default apiClient;
+```
+
+**Explain to Students:**
+- `baseURL`: No need to repeat the full URL in every request
+- `timeout`: Prevents requests from hanging forever
+- `headers`: Sets default content type for all requests
+- Axios instance allows consistent configuration across the app
+
+### Step 2: Create API Directory Structure
+
+```bash
+# In the client/src directory
+mkdir api
+```
+
+**Note for Instructor:** We'll create API functions in `src/api/items.js` as we need them.
+
+### Benefits of This Architecture
+
+**Explain to Students Why This is Better:**
+
+1. **Centralized Configuration**: All API calls use the same base URL and timeout
+2. **Maintainability**: Change the API endpoint in one place
+3. **Reusability**: API functions can be used across multiple components
+4. **Professional Standard**: This is how real-world applications are structured
+
+**Next:** We'll create our first API function when we integrate the Home page.
+
+---
 title: Home Page API Integration
-description: Replacing placeholder data with real API calls
+description: Creating our first API functions and connecting the home page
 duration: 20
 card_type: cue_card
 ---
 
 ## Connecting Home Page to Backend
 
-**Teaching Strategy:** Show the current placeholder implementation first, then replace it step by step. Students should understand the before and after. Explain the search, filter, and sort logic.
+**Teaching Strategy:** We'll create the API functions we need for the Home page, then integrate them.
 
 ### Current State Analysis
 
@@ -536,17 +589,53 @@ card_type: cue_card
 
 - Uses `PLACEHOLDER_ITEMS` constant
 - Has TODO comments where API calls should go
-- Simulates request behavior with local state updates
+- Needs two API operations: fetch all items, request borrow
 
-### Step 1: Add Axios Import
+### Step 1: Create Our First API Functions
+
+**File:** `src/api/items.js` (create this new file)
+
+```javascript
+import apiClient from '@/lib/axios';
+
+// Get all items - needed for Home page
+export const getAllItems = async (params = {}) => {
+  try {
+    const response = await apiClient.get('/items', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching items:', error);
+    throw error;
+  }
+};
+
+// Request to borrow an item - needed for Home page request buttons
+export const requestBorrowItem = async (itemId, borrowerData = {}) => {
+  try {
+    const response = await apiClient.post(`/items/${itemId}/request`, borrowerData);
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting borrow:', error);
+    throw error;
+  }
+};
+```
+
+**Explain to Students:**
+- We only create functions we actually need
+- Each function uses our axios instance for consistent configuration
+- Error handling is built into each function
+- The functions return just the data we need
+
+### Step 2: Import API Functions in Home.jsx
 
 **File:** `src/pages/Home.jsx` (at the top)
 
 ```javascript
-import axios from "axios";
+import { getAllItems, requestBorrowItem } from "@/api/items";
 ```
 
-### Step 2: Remove Placeholder Data
+### Step 3: Remove Placeholder Data
 
 **Remove this entire constant:**
 
@@ -554,7 +643,7 @@ import axios from "axios";
 // Remove the PLACEHOLDER_ITEMS array (lines 15-100+)
 ```
 
-### Step 3: Update State Initialization
+### Step 4: Update State Initialization
 
 **Change from:**
 
@@ -575,15 +664,15 @@ const [loading, setLoading] = useState(true);
 - Start with empty array since we'll fetch data
 - Start with `loading: true` since we need to fetch data
 
-### Step 4: Implement fetchItems Function
+### Step 5: Implement fetchItems Function
 
 **Replace the commented TODO with:**
 
 ```javascript
 const fetchItems = async () => {
   try {
-    const response = await axios.get("http://localhost:5000/api/items");
-    setItems(response.data);
+    const items = await getAllItems();
+    setItems(items);
   } catch (error) {
     console.error("Error fetching items:", error);
     toast.error("Failed to load items");
@@ -595,7 +684,7 @@ const fetchItems = async () => {
 
 Explain about toast notifications and navigation.
 
-### Step 5: Call fetchItems
+### Step 6: Call fetchItems
 
 ```javascript
 useEffect(() => {
@@ -603,15 +692,13 @@ useEffect(() => {
 }, []);
 ```
 
-### Step 6: Update Request Borrow Function
+### Step 7: Update Request Borrow Function
 
 ```javascript
 const handleRequestBorrow = async (itemId) => {
   try {
-    const response = await axios.post(
-      `http://localhost:5000/api/items/${itemId}/request`
-    );
-    toast.success(response.data.message);
+    const result = await requestBorrowItem(itemId);
+    toast.success(result.message);
     fetchItems(); // Refresh the list
   } catch (error) {
     console.error("Error requesting item:", error);
@@ -719,28 +806,47 @@ app.use(bodyParser.json());
 
 ---
 title: Item Details Page Integration  
-description: Connecting individual item view to backend API
+description: Adding new API function and connecting individual item view
 duration: 15
 card_type: cue_card
 ---
 
 ## Connecting Item Details Page
 
-**Context for Students:** The Item Details page currently uses placeholder data to show individual items. We'll connect it to our `GET /api/items/:id` endpoint.
+**Context for Students:** The Item Details page needs a function to fetch individual items by ID. We'll add this function to our API layer, then integrate it.
 
-### Step 1: Add Axios Import
+### Step 1: Add New API Function
+
+**File:** `src/api/items.js` (add to existing file)
+
+```javascript
+// Add this new function to the existing items.js file
+
+// Get a specific item by ID - needed for Item Details page
+export const getItemById = async (id) => {
+  try {
+    const response = await apiClient.get(`/items/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching item:', error);
+    throw error;
+  }
+};
+```
+
+### Step 2: Import API Functions
 
 **File:** `src/pages/ItemDetails.jsx`
 
 ```javascript
-import axios from "axios";
+import { getItemById, requestBorrowItem } from "@/api/items";
 ```
 
-### Step 2: Remove Placeholder Data
+### Step 3: Remove Placeholder Data
 
 **Remove the entire PLACEHOLDER_ITEMS array** (similar to what we did in Home.jsx)
 
-### Step 3: Update Initial State
+### Step 4: Update Initial State
 
 **Change from:**
 
@@ -760,7 +866,7 @@ const [loading, setLoading] = useState(true);
 const { id } = useParams();
 ```
 
-### Step 4: Implement fetchItem Function
+### Step 5: Implement fetchItem Function
 
 **Replace the commented TODO with:**
 
@@ -769,8 +875,8 @@ const navigate = useNavigate();
 
 const fetchItem = async () => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/items/${id}`);
-    setItem(response.data);
+    const item = await getItemById(id);
+    setItem(item);
   } catch (error) {
     console.error("Error fetching item:", error);
     toast.error("Failed to load item details");
@@ -783,7 +889,7 @@ const fetchItem = async () => {
 
 Explain the working of toast notifications and navigation.
 
-### Step 5: Call fetchItem in useEffect
+### Step 6: Call fetchItem in useEffect
 
 ```javascript
 useEffect(() => {
@@ -791,7 +897,7 @@ useEffect(() => {
 }, [id]);
 ```
 
-### Step 6: Update handleRequestBorrow
+### Step 7: Update handleRequestBorrow
 
 **Replace the placeholder implementation:**
 
@@ -799,10 +905,8 @@ useEffect(() => {
 const handleRequestBorrow = async () => {
   setRequesting(true);
   try {
-    const response = await axios.post(
-      `http://localhost:5000/api/items/${id}/request`
-    );
-    toast.success(response.data.message);
+    const result = await requestBorrowItem(id);
+    toast.success(result.message);
     fetchItem(); // Refresh item data
   } catch (error) {
     console.error("Error requesting item:", error);
@@ -825,24 +929,45 @@ const handleRequestBorrow = async () => {
 
 ---
 title: Add Item Form Integration
-description: Connecting the form to create new items via API
+description: Adding final API function and connecting the form submission
 duration: 15
 card_type: cue_card
 ---
 
 ## Connecting Add Item Form
 
-**Context:** The Add Item form currently simulates submission. We'll connect it to our `POST /api/items` endpoint to actually create new items.
+**Context:** The Add Item form needs to create new items. We'll add our final API function for this workshop, then integrate the form submission.
 
-### Step 1: Add Axios Import
+### Step 1: Add Final API Function
+
+**File:** `src/api/items.js` (add to existing file)
+
+```javascript
+// Add this final function to complete our API layer
+
+// Create a new item - needed for Add Item form
+export const createItem = async (itemData) => {
+  try {
+    const response = await apiClient.post('/items', itemData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating item:', error);
+    throw error;
+  }
+};
+```
+
+**Teaching Point:** Now our API layer is complete with all the functions we need for this workshop. In a real application, you'd continue adding functions as needed.
+
+### Step 2: Import API Function
 
 **File:** `src/pages/AddItem.jsx`
 
 ```javascript
-import axios from "axios";
+import { createItem } from "@/api/items";
 ```
 
-### Step 2: Replace Form Submission Logic
+### Step 3: Replace Form Submission Logic
 
 **Find the handleSubmit function and replace the entire placeholder implementation:**
 
@@ -863,10 +988,7 @@ const handleSubmit = async (e) => {
 
   setLoading(true);
   try {
-    const response = await axios.post(
-      "http://localhost:5000/api/items",
-      formData
-    );
+    await createItem(formData);
     toast.success("Item added successfully!");
     navigate("/");
   } catch (error) {
@@ -878,7 +1000,7 @@ const handleSubmit = async (e) => {
 };
 ```
 
-### Step 3: Understanding the Data Flow
+### Step 4: Understanding the Data Flow
 
 **Show Students What Happens:**
 
@@ -892,7 +1014,7 @@ const handleSubmit = async (e) => {
 8. Frontend redirects to home page
 9. Home page shows new item in the list
 
-### Step 4: Test Add Item Functionality
+### Step 5: Test Add Item Functionality
 
 **Instructor Demo:**
 

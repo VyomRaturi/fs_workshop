@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import axios from "axios";
+import { getItemById, requestBorrowItem } from "@/api/items";
 
 const ItemDetails = () => {
   const { id } = useParams();
@@ -28,8 +28,8 @@ const ItemDetails = () => {
 
   const fetchItem = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/items/${id}`);
-      setItem(response.data);
+      const data = await getItemById(id);
+      setItem(data);
     } catch (error) {
       console.error("Error fetching item:", error);
       toast.error("Failed to load item details");
@@ -42,10 +42,8 @@ const ItemDetails = () => {
   const handleRequestBorrow = async () => {
     setRequesting(true);
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/items/${id}/request`
-      );
-      toast.success(response.data.message);
+      const data = await requestBorrowItem(id);
+      toast.success(data.message);
       fetchItem(); // Refresh item data
     } catch (error) {
       console.error("Error requesting item:", error);

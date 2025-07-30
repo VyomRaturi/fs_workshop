@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import axios from "axios";
+import { createItem } from "@/api/items";
 
 const AddItem = () => {
   const navigate = useNavigate();
@@ -76,10 +76,7 @@ const AddItem = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/items",
-        formData
-      );
+      await createItem(formData);
       toast.success("Item added successfully!");
       navigate("/");
     } catch (error) {
