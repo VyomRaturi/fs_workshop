@@ -707,7 +707,7 @@ const handleRequestBorrow = async (itemId) => {
 };
 ```
 
-### Step 7: Test the Integration - Discovering CORS Error
+### Step 8: Test the Integration - Discovering CORS Error
 
 **Instructor Demo:**
 
@@ -1054,5 +1054,99 @@ npm run dev
 ```
 
 Test all the pages and routes in the application to ensure everything is functioning as expected.
+
+---
+title: Deployment
+description: Deploying our full-stack application to production
+duration: 5
+card_type: cue_card
+---
+
+## Deploying Our Full-Stack Application
+**Instructor Note:** Deployment is an important step in the development lifecycle. We'll cover the basics of deploying both the frontend and backend.
+
+Before deploying, we'll push our code base to GitHub so we can connect it to deployment platforms.
+
+### Frontend Deployment
+
+We'll deploy the React frontend using Vercel, a popular platform for hosting static sites and serverless functions.
+
+1. **Create a Vercel Account**: Go to [Vercel](https://vercel.com) and sign up.
+2. **Add New Project**: Click "New Project" or "Add New..." and select Project from dropdown.
+3. **Connect GitHub**: Authorize Vercel to access your GitHub account.
+4. **Select Repository**: Choose the repository where your React app is hosted. If the repository doesn't show in the list, go to your GitHub account, then Settings > Integrations/Applications. Configure the Vercel integration to allow access. Now again, go to Vercel and refresh the list of repositories. Find your repository and import it.
+5. **Deploy**: Change the root directory to `client` (where your React app is located), leave all other settings as default and click "Deploy".
+6. **Visit Your Site**: Once deployed, Vercel will provide a URL where your React app is live.
+
+### Backend Deployment
+
+We'll deploy the Express backend using Render, a platform that supports Node.js applications.
+
+Before deploying, we need to secure our backend by adding CORS configuration to allow requests from our frontend domain only.
+
+**Update CORS Configuration**: In `server.js`, change the CORS middleware to allow only your frontend domain:
+
+```javascript
+const corsOptions = {
+  origin: 'http://localhost:5173', // Replace with your frontend URL, do not add a trailing slash
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+```
+
+**Instructor Note:** Make sure to replace `http://localhost:5173` with your actual frontend URL when deploying and push the changes to GitHub.
+
+### Deploying the Backend
+1. **Create a Render Account**: Go to [Render](https://render.com) and sign up.
+2. **Create a New Web Service**: Click on "New" and select "Web Service".
+3. **Connect GitHub**: Authorize Render to access your GitHub account.
+4. **Select Repository**: Choose the repository where your Express app is hosted. If the repository doesn't show in the list, go to your GitHub account, then Settings > Integrations/Applications. Configure the Render integration to allow access. Now again, go to Render and refresh the list of repositories. Find your repository and import it.
+5. **Configure Build Settings**: 
+   - Set the root directory to `backend` (where your Express app is located).
+   - Set the build command to `npm install`.
+   - Set the start command to `npm run start`.
+   - Set the environment to Node.js.
+6. **Deploy**: Click "Create Web Service" to start the deployment process.
+7. **Visit Your API**: Once deployed, Render will provide a URL where your Express API is live.
+
+### Final Steps
+- **Update Frontend API URL**: In your React app, update the base URL in `src/lib/axios.js` to point to your deployed backend URL.
+
+```javascript
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: 'http://localhost:5000/api', // Replace with your deployed backend URL
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default apiClient;
+```
+
+## Solving the vercel bug
+
+If you visit any route other than your home page directly, you might encounter a 404 error. This is because Vercel needs to know how to handle client-side routing in React.
+
+### Fixing Vercel Routing Issue
+To fix this, create a `vercel.json` file in the root of your React app (inside the `client` directory) with the following content:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+This tells Vercel to serve `index.html` for all routes, allowing React Router to handle the routing on the client side.
+
+### Final Testing
+- After deploying both frontend and backend, test the entire application end-to-end.
+- Ensure all features work as expected: viewing items, requesting to borrow, adding new items, etc.
 
 **End of Workshop - Great job! 🎉**
